@@ -1,0 +1,53 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+textarea{
+  resize: none !important;
+}
+
+.table__subject{
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 0;
+}
+
+.table__voice{
+  width: 150px;
+  height: 40px;
+}
+
+@media (max-width: 768px){
+  .table__choice{
+    display: none;
+  }
+}
+
+@media (max-width: 430px){
+}
+
+.fax__image{
+  width: 500px;
+  height: 500px;
+  object-fit: scale-down;
+  display: block;
+  margin: 1em;
+  border: 1px solid black;
+}
+

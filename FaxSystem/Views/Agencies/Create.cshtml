@@ -1,0 +1,53 @@
+﻿@model FaxSystem.Models.Agency
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>تكويد الجهات</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="input-group col-12 form__section">
+                <label asp-for="Name" class="form-label col">اســـــم الجـــهة</label>
+                <input asp-for="Name" class="col form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="حفظ" class="btn btn-secondary col-2" />
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @*@Html.DisplayNameFor(model => model.Name)*@
+                <label asp-for="Name" class="form-label col">قــائـــمة الجهـــات</label>
+
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in (IEnumerable<Agency>)ViewData["AgenciesData"])
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Name)
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.ID">تعديل</a> |
+
+                    <a asp-action="Delete" asp-route-id="@item.ID">حذف</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,136 @@
+﻿@model FaxSystem.Models.CreateFaxbetweenbranches
+@{
+    ViewData["Title"] = "إرسال مكاتبة الي فرع";
+}
+<link rel="stylesheet" href="~/css/chosen.css">
+
+
+
+<div class="row wrapper">
+    <form asp-controller="FaxBetweenBranches" asp-action="Create"
+        enctype="multipart/form-data">
+        <div class="input-group row form__section ms-1">
+            <label asp-for="faxBetweenBranches.Date" class="form-label col-md-3
+                col-xs-12">تاريخ المكاتبة</label>
+            @{
+                string faxDate =
+                Model.faxBetweenBranches.Date.ToString("dd/MM/yyyy");
+                <input class="col-md-3 col-xs-12 p-1 form-control" value="@faxDate"
+                    readonly />
+            }
+            @Html.HiddenFor(x=>x.faxBetweenBranches.Date)
+            <span class="col-md-7 col-xs-12"></span>
+        </div>
+        <div class="input-group row form__section ms-1">
+            <label asp-for="faxBetweenBranches.RegistrationNum"
+                class="form-label col-md-3 col-xs-12">رقم القيد</label>
+            <input type="text" asp-for="faxBetweenBranches.RegistrationNum"
+                class="col-md-6 col-xs-12 form-control" />
+            <span asp-validation-for="faxBetweenBranches.RegistrationNum"
+                class="text-danger col-md-3 col-xs-12"></span>
+        </div>
+        <div class="input-group col-12 form__section">
+            @{
+                string ids = "";
+                @foreach (var item in ViewBag.ReciverBranchID)
+                {
+                    ids += item.Value + "-";
+                }
+            }
+            <label asp-for="Branches" class="form-label col-md-3 col-xs-12">الأفرع
+                المرسل إليها</label>
+            <div class="col-md-6 col-xs-12">
+                <div class="d-flex mb-2">
+                    <span>تحديد الكل</span>
+                    <input class="form-check-input me-5" type="checkbox" id="selectAllBranchesCheck">
+                </div>
+                <select id="branches" asp-for="Branches" class="w-100"
+                    asp-items="ViewBag.ReciverBranchID"
+                    data-ids="@ids" data-placeholder="رجاء إختيار الفرع" multiple></select>
+            </div>
+            <span asp-validation-for="Branches" class="text-danger col-md-3
+                col-xs-12"></span>
+        </div>
+        <div class="input-group row form__section ms-1">
+            <label asp-for="faxBetweenBranches.Subject" class="form-label
+                col-md-3 col-xs-12">الموضوع</label>
+            <textarea asp-for="faxBetweenBranches.Subject" class="form-control
+                col-md-6 col-xs-12" lang="ar"
+                rows="3"></textarea>
+            <span asp-validation-for="faxBetweenBranches.Subject"
+                class="text-danger col-md-3 col-xs-12"></span>
+        </div>
+        <div class="input-group row form__section ms-1">
+            <label asp-for="faxBetweenBranches.FaxLinks" class="form-label
+                col-md-3 col-xs-12">إرفاق صور
+                المكاتبة</label>
+            <input type="file" asp-for="faxBetweenBranches.FaxLinks"
+                name="files" id="FaxLink" class="col-md-6 col-xs-12 form-control" multiple/>
+            <span asp-validation-for="faxBetweenBranches.FaxLinks"
+                class="text-danger col-md-3 col-xs-12"></span>
+        </div>
+        <div class="input-group row form__section ms-1">
+            <label asp-for="faxBetweenBranches.Notes" class="form-label col-md-3
+                col-xs-12">ملاحظات</label>
+            <textarea asp-for="faxBetweenBranches.Notes" class="form-control
+                col-md-6 col-xs-12" lang="ar"
+                rows="3"></textarea>
+            <span asp-validation-for="faxBetweenBranches.Notes"
+                class="text-danger col-md-3 col-xs-12"></span>
+        </div>
+        <div class="row mt-4 mb-3 d-flex justify-content-evenly
+            align-items-center">
+            <input type="submit" value="حفظ المكاتبة" class="btn btn-success
+                w-25" />
+        </div>
+        @Html.HiddenFor(x => x.faxBetweenBranches.SenderBranchID)
+    </form>
+</div>
+<script src="~/js/signalr/dist/browser/signalr.js"></script>
+@*<script>
+    var connection1 = new signalR.HubConnectionBuilder().withUrl("/cHub").build();
+
+    connection1.start().then(function () {
+        if (@ViewData["ress"] != -1) {
+            connection1.invoke("SendMessage", "11", "11", @ViewData["ress"], 2).catch(function (err) {
+                return console.error(err.toString());
+            });
+        }
+    }).catch(function (err) {
+        return console.error(err.toString());
+    });
+</script>*@
+<script src="~/lib/multiselect/jquery-3.2.1.min.js"></script>
+<script src="~/lib/multiselect/chosen.jquery.min.js"></script>
+
+<script>
+    $("#branches").chosen({ no_results_text: "لم يتم العثور على الفرع", rtl: true });
+    document.getElementById('selectAllBranchesCheck').addEventListener('change', function (e) {
+        if(e.target.checked){
+            let ids = $('#branches').attr("data-ids").split('-');
+            ids.pop();
+            ids = ids.map(x => +x);
+            $("#branches").val(ids).trigger("chosen:updated");
+            $(".chosen-container").addClass('d-none');
+        } else {
+            $("#branches").val([]).trigger("chosen:updated");
+            $(".chosen-container").removeClass('d-none');
+        }
+    })
+</script>
+@if (TempData["faxid"] != null)
+{
+    <script src="~/js/signalr/dist/browser/signalr.js"></script>
+<script>
+        var connectionCreateFaxBranch = new signalR.HubConnectionBuilder().withUrl("/cHub").build();
+    
+        connectionCreateFaxBranch.start().then(function () {
+
+            connectionCreateFaxBranch.invoke("SendMessage", @TempData["faxid"].ToString(), @int.Parse(@TempData["faxtype"].ToString())).catch(function (err) {
+                return console.error(err.toString());
+            });
+        
+    }).catch(function (err) {
+        return console.error(err.toString());
+    });
+</script>}

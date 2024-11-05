@@ -1,0 +1,263 @@
+@using FaxSystem.ViewModels
+@model FaxBranchTableRowViewModel
+
+<tr class="table-secondary align-middle">
+    @if (@Model.IsSuspended || @Model.IsManager)
+    {
+        <td>فرع</td>
+    }
+    @{
+        List<int> roles = ((IEnumerable<int>)TempData.Peek("roles")).ToList();
+    }
+    <td class="table__subject">@Model.faxBetweenBranches.Subject</td>
+    <td>@Model.faxBetweenBranches.RegistrationNum</td>
+    @if (@Model.IsSuspended || @Model.IsManager)
+    {
+        <td>@Model.faxBetweenBranches.senderBranch.Name</td>
+    }
+    <td>
+        @if (@Model.faxBetweenBranches.BranchFaxRecivers.Count() == 1)
+        {
+            @Model.faxBetweenBranches.BranchFaxRecivers.First().branch.Name
+        }
+        else if (!@Model.IsRealTime)
+        {
+            string ReceiverBranches = "";
+            @foreach (var receiver in @Model.faxBetweenBranches.BranchFaxRecivers)
+            {
+                ReceiverBranches += receiver.branch.Name + "-";
+            }
+            <button type="button" class="btn btn-secondary"
+                data-bs-toggle="modal"
+                data-bs-target="#faxBranchReciversModal"
+                data-bs-receivers="@ReceiverBranches">
+                <span class="table__choice" name="tableChoiceText">الأفرع</span>
+                <i class="bi bi-three-dots-vertical"></i>
+            </button>
+            <div class="modal fade" id="faxBranchReciversModal">
+                <div class="modal-dialog modal-dialog-centered
+                modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header border-bottom-0">
+                            <h1 class="modal-title fs-5">الأفرع المستلمة</h1>
+                            <button type="button" class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </td>
+    <td>
+        @Model.faxBetweenBranches.Date.Day/@Model.faxBetweenBranches.Date.Month/@Model.faxBetweenBranches.Date.Year
+    </td>
+    <td>
+        @if(!@Model.IsRealTime)
+        {
+            string BranchFaxesToBranch = "";
+            @foreach (var faxLink in @Model.faxBetweenBranches.FaxLinks)
+            {
+                BranchFaxesToBranch += faxLink.link + "?";
+            }
+            string receivers = "";
+            @foreach (var receiver in @Model.faxBetweenBranches.BranchFaxRecivers)
+            {
+                receivers += receiver.branch.Name + "-";
+            }
+            
+            <button type="button" class="btn btn-secondary"
+                title="عرض تفاصيل المكاتبة"
+                data-bs-toggle="modal"
+                data-bs-target="#branchFaxToBranchModal"
+                data-bs-RegistrationNum="@Model.faxBetweenBranches.RegistrationNum"
+                data-bs-SenderBranch="@Model.faxBetweenBranches.senderBranch.Name"
+                data-bs-ReceiverBranches="@receivers"
+                data-bs-Subject="@Model.faxBetweenBranches.Subject"
+                data-bs-Date="@Model.faxBetweenBranches.Date.Day/@Model.faxBetweenBranches.Date.Month/@Model.faxBetweenBranches.Date.Year"
+                data-bs-Notes="@Model.faxBetweenBranches.Notes"
+                data-bs-FaxLinks="@BranchFaxesToBranch">
+                <i class="bi bi-eye"></i>
+            </button>
+            <div class="modal fade" id="branchFaxToBranchModal"
+             tabindex="-1" aria-labelledby="faxModalLabel"
+             aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered
+                modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header border-bottom-0">
+                            <h1 class="modal-title fs-5"
+                            id="faxModalLabel">
+                                تفاصيل المكاتبة
+                            </h1>
+                            <button type="button" class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>رقم القيد</th>
+                                        <th>الفرع المرسل</th>
+                                        <th>الأفرع المستلمة</th>
+                                        <th>الموضوع</th>
+                                        <th>التاريخ</th>
+                                        <th>الملاحظات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div id="branchFaxToBranchImagesContainer" class="d-flex overflow-auto"></div>
+                            <a id="branchFaxToBranchFileContainer" class="btn btn-link"
+                           asp-controller="Faxes" asp-action="fileurl"
+                           download='مكاتبة_@Model.faxBetweenBranches.RegistrationNum'></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        @if (@Model.CanEdit && !@Model.IsRealTime)
+        {
+            <a class="btn btn-warning" title="تعديل المكاتبة"
+            asp-controller="FaxBetweenBranches" asp-action="Edit"
+            asp-route-id="@Model.faxBetweenBranches.ID">
+                <i class="bi bi-pen"></i>
+            </a>
+        }
+        @if (@Model.IsSuspended)
+        {
+            @if (@Model.CanDecide && !@Model.IsRealTime)
+            {
+                <a class="btn btn-success" asp-controller="Decision"
+            asp-action="Create"
+            asp-route-id="@Model.faxBetweenBranches.ID" asp-route-type="1">
+                    @if (roles.Contains(5))
+                    {
+                        <span>ابداء رأي</span>
+                    }
+                    else
+                    {
+                        <span>إتخاذ قرار</span>
+                    }
+                    <i class="bi bi-file-earmark-check"></i>
+                </a>
+            }
+        }
+        else
+        {
+            @if (@Model.CanSuspend && @Model.faxBetweenBranches.DecisionID == null && !@Model.IsRealTime)
+            {
+                <div class="dropdown col-md-4 btn">
+                    <button type="button" class="btn btn-outline-success dropdown-toggle" title="عرض علي القيادات"  data-bs-toggle="dropdown">
+                        <span class="table__choice" name="tableChoiceText">عرض
+                            علي القيادات</span>
+                        <i class="bi bi-box-arrow-up-right"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" asp-controller="FaxBetweenBranches" 
+                            asp-action="Suspend" asp-route-id="@Model.faxBetweenBranches.ID" 
+                            asp-route-SuspendStatus="1">عرض على السيد نائب المدير</a>
+                        </li>
+                        <li><a class="dropdown-item" asp-controller="FaxBetweenBranches" 
+                            asp-action="Suspend" asp-route-id="@Model.faxBetweenBranches.ID" 
+                            asp-route-SuspendStatus="2">عرض على السيد المدير</a>
+                        </li>
+                        <li><a class="dropdown-item" asp-controller="FaxBetweenBranches" 
+                            asp-action="Suspend" asp-route-id="@Model.faxBetweenBranches.ID" 
+                            asp-route-SuspendStatus="3">عرض على الكل</a>
+                        </li>
+                    </ul>
+                </div>
+            }
+            else if (@Model.faxBetweenBranches.DecisionID == null)
+            {
+                @*لايوجد قرار وليس لك صلاحية العرض على القيادات*@
+            }
+            else if (!@Model.IsRealTime)
+            {
+                <button type="button" class="btn btn-success"
+                    title="عرض تفاصيل القرار"
+                    data-bs-toggle="modal"
+                    data-bs-target="#decisionDetailsModal"
+                    data-bs-Opinion="@Model.faxBetweenBranches.decision.Opinion"
+                    data-bs-OpinionVoice="@Model.faxBetweenBranches.decision.OpinionVoice"
+                    data-bs-DecisionText="@Model.faxBetweenBranches.decision.DecisionText"
+                    data-bs-DecisionCheck="@Model.faxBetweenBranches.decision.DecisionCheck"
+                    data-bs-DecisionVoice="@Model.faxBetweenBranches.decision.DecisionVoice"
+                    data-bs-PersonalReview="@Model.faxBetweenBranches.decision.PersonalReview">
+                    <span class="table__choice" name="tableChoiceText">عرض
+                        القرار</span>
+                    <i class="bi bi-eye"></i>
+                </button>
+                <div class="modal fade" id="decisionDetailsModal">
+                    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header border-bottom-0">
+                                <h1 class="modal-title fs-5">تفاصيل القرار</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class=" d-flex flex-column justify-content-start align-items-start">
+                                    <div class="d-flex w-100 mb-3">
+                                        <label class="form-label col-5 ms-2">رأي نائب المدير</label>
+                                        <input class="form-control d-none" type="text" disabled />
+                                        <span class="d-none form-label">لم يتم إبداء رأي</span>
+                                    </div>
+                                    <div class="d-flex w-100 mb-2">
+                                        <label class="form-label col-5 ms-2">تعليق نائب المدير الصوتي</label>
+                                        <audio id="opinionVoiceModal" class="d-none" controls></audio>
+                                        <span class="d-none form-label">لا يوجد</span>
+                                    </div>
+                                    <hr class="bg-dark w-100" />
+                                    <div class="d-flex w-100 mb-2">
+                                        <label class="form-label col-5 ms-2">عرض شخصي</label>
+                                        <input class="form-check-input" type="checkbox" disabled />
+                                    </div>
+                                    <div class="d-flex w-100 mb-2">
+                                        <label class="form-label col-5 ms-2">قرار السيد المدير</label>
+                                        <input class="form-check-input" type="checkbox" disabled />
+                                    </div>
+                                    <div class="d-flex w-100 mb-3">
+                                        <label class="form-label col-5 ms-2">تعليق السيد المدير الكتابي</label>
+                                        <input class="form-control d-none" type="text" disabled />
+                                        <span class="d-none form-label">لا يوجد</span>
+                                    </div>
+                                    <div class="d-flex w-100 mb-2">
+                                        <label class="form-label col-5 ms-2">تعليق السيد المدير الصوتي</label>
+                                        <audio id="decisionVoiceModal" class="d-none" controls></audio>
+                                        <span class="d-none form-label">لا يوجد</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        @if (@Model.IsRealTime)
+        {
+            <button type="button" class="btn btn-primary" onclick="window.location.reload()">
+                <span class="table__choice" name="tableChoiceText">تحديث الصفحة لعرض التفاصيل</span>
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+        }
+    </td>
+    <td>
+        @if(@Model.IsSuspended == false && @Model.faxBetweenBranches.DecisionID != null && @Model.faxBetweenBranches.decision.DecisionVoice != null)
+        {
+            <audio src="" name="tableRecordVoice" class="table__voice me-2 ms-2" controls></audio>
+        }
+    </td>
+</tr>

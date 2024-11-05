@@ -1,0 +1,261 @@
+﻿@model ArchPar
+@{
+    ViewData["Title"] = "المكاتبات المعلقة";
+
+}
+
+<form asp-controller="Archive" asp-action="SuspendeArchive" id="searchForm">
+    <div class="d-flex justify-content-start align-items-start">
+        <div class="d-flex justify-content-start align-items-center mb-3 w-50">
+            <label for="EntryNumSearch" class="form-label ms-2 col-2">رقم القيد</label>
+            <input type="search" asp-for="EntryNumSearch" class="form-control
+                w-50">
+        </div>
+        <div class="d-flex justify-content-start align-items-center mb-3 w-50">
+            <label for="SubjectSearch" class="form-label ms-2 col-2">الموضوع</label>
+            <input type="search" asp-for="SubjectSearch" class="form-control
+                w-50">
+        </div>
+    </div>
+    <div class="d-flex justify-content-start align-items-start">
+        <div class="d-flex justify-content-start align-items-center mb-3 w-50">
+            <label for="SenderBranchSearch" class="form-label ms-2 col-2">البحث
+                بالجهات او بالأفرع</label>
+            <select class="form-select w-50" asp-for="from" s
+                asp-items="ViewBag.from">
+            </select>
+        </div>
+    </div>
+    <div class="d-flex justify-content-start align-items-start">
+        <div class="d-flex justify-content-start align-items-center mb-3 w-50">
+            <label for="SenderBranchSearch" class="form-label ms-2 col-2">الفرع
+                المرسل او المستلم</label>
+            <select class="form-select w-50" asp-for="BranchID"
+                asp-items="ViewBag.BranchID">
+                <option value="">اختر الفرع</option>
+            </select>
+        </div>
+        <div class="d-flex justify-content-start align-items-center mb-3 w-50">
+            <label for="SenderBranchSearch" class="form-label ms-2 col-2">جهة
+                الإرسال</label>
+            <select class="form-select w-50" asp-for="AgencyID"
+                asp-items="ViewBag.AgencyID">
+                <option value="">اختر الجهة</option>
+            </select>
+        </div>
+    </div>
+    <div class=" d-flex flex-column justify-content-start align-items-start">
+        <label class="form-label">البحث بتاريخ الفاكس</label>
+        <div class="d-flex w-100 mb-3">
+            <div class="d-flex w-50">
+                <label for="StartDate" class="form-label ms-2 col-2">تاريخ
+                    البداية</label>
+                <input type="date" asp-for="StartDate" class="form-control
+                    w-50">
+            </div>
+            <div class="d-flex w-50">
+                <label for="EndDate" class="form-label ms-2 col-2">تاريخ النهاية</label>
+                <input type="date" asp-for="EndDate" class="form-control w-50">
+            </div>
+        </div>
+    </div>
+    <input type="submit" value="البحث" class="btn btn-secondary col-2">
+    <input type="button" onclick="clearSearchConditions();"
+        value="إلغاء شروط البحث" class="btn btn-outline-secondary col-2">
+</form>
+
+<div class="table-responsive mt-3 wrapper me-0 ms-0">
+    <table class="table table-striped-columns">
+        <thead>
+            <tr>
+                <th>نوع المكاتبة</th>
+                <th>الموضوع</th>
+                <th>رقم القيد</th>
+                <th>الجهة/الفرع المرسل</th>
+                <th>الفرع المستلم</th>
+                <th>التاريخ</th>
+                <th>الخيارات</th>
+            </tr>
+        </thead>
+        <tbody class="table-group-divider" id="suspendedArchiveTable">
+            @foreach (var obj in Model.BranchFaxes)
+            {
+                @await Component.InvokeAsync("FaxTableRow", new { fax = obj,
+            IsSuspended = true, CanEdit = ViewData["CanEditFax"], CanDecide =
+            ViewData["CanDecideFax"], IsManager = true })
+            }
+
+            @foreach (var obj in Model.BranchFaxesToBranch)
+            {
+                @await Component.InvokeAsync("FaxBranchTableRow", new {
+            faxBetweenBranches = obj, IsSuspended = true, CanEdit =
+            ViewData["CanEditFaxBranch"], CanDecide =
+            ViewData["CanDecideFaxBranch"], IsManager = true })
+            }
+        </tbody>
+    </table>
+</div>
+<script src="~/js/signalr/dist/browser/signalr.js"></script>
+<script>
+    function clearSearchConditions() {
+        location.href = location.href.split("?")[0];
+    }
+    
+    function isImgUrl(url) {
+        return /\.(jpg|jpeg|png|webp|avif|gif)$/.test(url)
+    }
+    
+    let branchFaxDetailsModal = document.getElementById("branchFaxModal");
+    branchFaxDetailsModal?.addEventListener('show.bs.modal', event => {
+        const button = event.relatedTarget;
+        const faxData = branchFaxDetailsModal.querySelector('.modal-body tbody tr').children;
+        faxData[0].innerHTML = button.getAttribute('data-bs-RegistrationNum');
+        faxData[1].innerHTML = button.getAttribute('data-bs-SenderAgency');
+        faxData[2].innerHTML = button.getAttribute('data-bs-Subject');
+        faxData[3].innerHTML = button.getAttribute('data-bs-Date');
+        faxData[4].innerHTML = button.getAttribute('data-bs-Notes');
+
+        let imagesContainer = branchFaxDetailsModal.querySelector('#branchFaxImagesContainer');
+        imagesContainer.innerHTML = "";
+        const links = button.getAttribute('data-bs-FaxLinks').split('?');
+        let branchFaxFileContainer = document.getElementById("branchFaxFileContainer");
+        if(links[0]){
+            if(isImgUrl(links[0])){
+                branchFaxFileContainer.innerText = "";
+                links.pop();
+                links.forEach((link) => {
+                    let image = document.createElement('img');
+                    image.src = "/StaticFiles/" + link;
+                    image.setAttribute("class", "fax__image");
+                    image.setAttribute("loading", "lazy");
+                    imagesContainer.appendChild(image);
+                })
+            } else {
+                branchFaxFileContainer.innerText = "تحميل ملف المكاتبة";
+                branchFaxFileContainer.href = branchFaxFileContainer.href.split('?')[0];
+                branchFaxFileContainer.href = branchFaxFileContainer.href + `?a=${links[0]}`;
+            }
+        }
+    });
+
+    let branchFaxToBranchDetailsModal = document.getElementById("branchFaxToBranchModal");
+    branchFaxToBranchDetailsModal?.addEventListener('show.bs.modal', event => {
+        const button = event.relatedTarget;
+        const faxData = branchFaxToBranchDetailsModal.querySelector('.modal-body tbody tr').children;
+        faxData[0].innerHTML = button.getAttribute('data-bs-RegistrationNum');
+        faxData[1].innerHTML = button.getAttribute('data-bs-SenderBranch');
+        faxData[3].innerHTML = button.getAttribute('data-bs-Subject');
+        faxData[4].innerHTML = button.getAttribute('data-bs-Date');
+        faxData[5].innerHTML = button.getAttribute('data-bs-Notes');
+
+        faxData[2].innerHTML = "";
+        faxData[2].setAttribute('class','list-group list-group-numbered');
+        let receivers = button.getAttribute('data-bs-ReceiverBranches').split('-');
+        receivers.pop();
+        receivers.forEach((name)=>{
+            let item = document.createElement('li');
+            item.innerHTML = name;
+            item.setAttribute('class','list-group-item');
+            faxData[2].appendChild(item);
+        })
+
+        let imagesContainer = branchFaxToBranchDetailsModal.querySelector('#branchFaxToBranchImagesContainer');
+        imagesContainer.innerHTML = "";
+        const links = button.getAttribute('data-bs-FaxLinks').split('?');
+        let branchFaxToBranchFileContainer = document.getElementById("branchFaxToBranchFileContainer");
+        if(links[0]){
+            if(isImgUrl(links[0])){
+                branchFaxToBranchFileContainer.innerText = "";
+                links.pop();
+                links.forEach((link) => {
+                    let image = document.createElement('img');
+                    image.src = "/StaticFiles/" + link;
+                    image.setAttribute("class", "fax__image");
+                    image.setAttribute("loading", "lazy");
+                    imagesContainer.appendChild(image);
+                })
+            } else {
+                branchFaxToBranchFileContainer.innerText = "تحميل ملف المكاتبة";
+                branchFaxToBranchFileContainer.href = branchFaxToBranchFileContainer.href.split('?')[0];
+                branchFaxToBranchFileContainer.href = branchFaxToBranchFileContainer.href + `?a=${links[0]}`;
+            }
+        }
+    });
+
+    let faxReciversModal = document.getElementById("faxReciversModal");
+    faxReciversModal?.addEventListener('show.bs.modal', event => {
+        const button = event.relatedTarget;
+        const receiversContainer = faxReciversModal.querySelector('.modal-body');
+        receiversContainer.innerHTML = "";
+        const receivers = button.getAttribute('data-bs-receivers').split('-');
+        receivers.pop();
+        receivers.forEach((elm, idx) => {
+            let breakLine = document.createElement('br');
+            let element = document.createElement('span');
+            element.innerHTML = (idx + 1) + "- " + elm;
+            receiversContainer.appendChild(element);
+            receiversContainer.appendChild(breakLine);
+        })
+    });
+
+    let faxBranchReciversModal = document.getElementById("faxBranchReciversModal");
+    faxBranchReciversModal?.addEventListener('show.bs.modal', event => {
+        const button = event.relatedTarget;
+        const receiversContainer = faxBranchReciversModal.querySelector('.modal-body');
+        receiversContainer.innerHTML = "";
+        const receivers = button.getAttribute('data-bs-receivers').split('-');
+        receivers.pop();
+        receivers.forEach((elm, idx) => {
+            let breakLine = document.createElement('br');
+            let element = document.createElement('span');
+            element.innerHTML = (idx + 1) + "- " + elm;
+            receiversContainer.appendChild(element);
+            receiversContainer.appendChild(breakLine);
+        })
+    });
+</script>
+<script>
+    var connection = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
+
+    connection.start().then(function () {
+    }).catch(function (err) {
+        return console.error(err.toString());
+    });
+
+    connection.on("ReceiveMessage", function (user, message,id,type) {
+        const audio = document.getElementById("notifactionAudio");
+        audio.play();
+
+        $.ajax({
+            type: "POST",
+            url: "/Archive/sendfax",
+            data: {id,type},
+            success: function (data) {
+                data = data.replaceAll('td','th');
+                let newRow = document.createElement("tr");
+                newRow.innerHTML = data;
+                newRow.classList.add("table-info");
+                document.getElementById("suspendedArchiveTable").prepend(newRow);
+            }
+        });
+
+        $.ajax({
+            type: "POST",
+            url: "/Home/numofsuarc",
+            data: {},
+            success: function (data) {
+                console.log(data);
+                var a = data;
+                if(a!=0){
+                    document.getElementById("suspendedFaxesCountDropDown").innerText = a;
+                    document.getElementById("suspendedFaxesCountNav").innerText = a;
+                }
+                else{
+                    document.getElementById("suspendedFaxesCountDropDown").innerText = "";
+                    document.getElementById("suspendedFaxesCountNav").innerText = "";
+                }
+            }
+        });
+
+    });
+</script>

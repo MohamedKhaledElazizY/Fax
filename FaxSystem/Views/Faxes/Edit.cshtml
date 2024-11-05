@@ -1,0 +1,68 @@
+﻿@model FaxSystem.Models.Fax
+@{
+    ViewData["Title"] = "تعديل مكاتبة";
+}
+
+<div class="row wrapper">
+    <form asp-controller="Faxes" asp-action="Edit"
+        enctype="multipart/form-data">
+        <div class="input-group row form__section ms-1">
+            <label asp-for="Date" class="form-label col-md-3 col-xs-12">تاريخ
+                المكاتبة</label>
+            @{
+                string faxDate = Model.Date.ToString("dd/MM/yyyy");
+                <input class="col-md-3 col-xs-12 p-1 form-control" value="@faxDate"
+                    readonly />
+            }
+            @Html.HiddenFor(x=>x.Date)
+            <span class="col-md-7 col-xs-12"></span>
+        </div>
+        <div class="input-group row form__section ms-1">
+            <label asp-for="RegistrationNum" class="form-label col-md-3
+                col-xs-12">رقم القيد</label>
+            <input type="text" asp-for="RegistrationNum" class="col-md-6
+                col-xs-12 form-control" readonly />
+            <span class="text-danger col-md-3 col-xs-12"></span>
+        </div>
+        <div class="input-group col-12 form__section">
+            <label class="form-label col-md-3 col-xs-12">الجهة المرسلة</label>
+            <input type="text" asp-for="senderAgency.Name" class="form-control
+                col-md-6 col-xs-12" readonly />
+            <span class="text-danger col-md-3 col-xs-12"></span>
+            @Html.HiddenFor(x=>x.SenderAgencyID)
+        </div>
+        <div class="form-group">
+            @*<label asp-for="SenderAgencyID" class="control-label"></label>
+            <select asp-for="SenderAgencyID" class="form-control"
+            asp-items="ViewBag.SenderBranchID"></select>
+            <span asp-validation-for="SenderAgencyID"
+            class="text-danger"></span>*@
+        </div>
+        <div class="input-group row form__section ms-1">
+            <label asp-for="Subject" class="form-label col-md-3 col-xs-12">الموضوع</label>
+            <textarea asp-for="Subject" class="form-control col-md-6 col-xs-12"
+                lang="ar" rows="3"></textarea>
+            <span class="text-danger col-md-3 col-xs-12"></span>
+        </div>
+        <div class="input-group row form__section ms-1">
+            <label asp-for="FaxLinks" class="form-label col-md-3 col-xs-12">إرفاق
+                صور أخرى</label>
+            <input type="file" name="files" id="FaxLink" class="col-md-6
+                col-xs-12 form-control" multiple
+                accept=".pdf, image/*" />
+            <span class="col-md-3 col-xs-12"></span>
+        </div>
+        <div class="input-group row form__section ms-1">
+            <label asp-for="Notes" class="form-label col-md-3 col-xs-12">ملاحظات</label>
+            <textarea asp-for="Notes" class="form-control col-md-6 col-xs-12"
+                lang="ar" rows="3"></textarea>
+            <span asp-validation-for="Notes" class="text-danger col-md-3
+                col-xs-12"></span>
+        </div>
+        <div class="row mt-4 mb-3 d-flex justify-content-evenly
+            align-items-center">
+            <input type="submit" value="حفظ المكاتبة" class="btn btn-success
+                w-25" />
+        </div>
+    </form>
+</div>

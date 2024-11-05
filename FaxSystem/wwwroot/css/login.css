@@ -1,0 +1,24 @@
+.login__body{
+    text-align: center;
+    padding: 3rem 0 3rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+
+}
+
+.login__main{
+    margin: auto;
+    width: 100%;
+    max-width: 400px;
+}
+
+.login__form{
+    width: 100%;
+    text-align: end;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+}

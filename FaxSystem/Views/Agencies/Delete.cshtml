@@ -1,0 +1,26 @@
+﻿@model FaxSystem.Models.Agency
+
+@{
+    ViewData["Title"] = "Delete";
+}
+
+<h3>هل انت متأكد من حذف هذه الجهة؟</h3>
+<div>
+    <h4>الجـــــهة</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            <label asp-for="Name" class="form-label col">:اســم الجهـــــة</label>
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Name)
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </dd>
+    </dl>
+    
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="ID" />
+        <input type="submit" value="حــــــذف" class="btn btn-danger" /> |
+        <a asp-action="Create">العوده لقائمة الجهات</a>
+    </form>
+</div>

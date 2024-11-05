@@ -1,0 +1,39 @@
+﻿@*@model IEnumerable<FaxSystem.Models.UserRoles>*@
+@model IEnumerable<dynamic>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>صلاحيات المستخدمين</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                المستخدم
+            </th>
+            <th>
+                الصلاحيات
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @for(int c= 0; c < (int)ViewData["count"];c++) @*ViewData["roles"] as IList<string>*@
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => ((List<string>)ViewData["users"])[c])
+                    
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem =>((List<string>)ViewData["rolesNames"])[c])
+                </td>
+            <td>
+                    @Html.ActionLink("تعديل", "Edit", new { id = ((List<int>)ViewData["Ids"])[c]})
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

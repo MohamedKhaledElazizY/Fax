@@ -1,0 +1,96 @@
+﻿@model FaxSystem.Models.CreateFaxbetweenbranches
+@{
+    ViewData["Title"] = "تعديل مكاتبة إلي فرع";
+}
+<link rel="stylesheet" href="~/css/chosen.css">
+
+<div class="row wrapper">
+    <form asp-controller="FaxBetweenBranches" asp-action="Edit"
+        enctype="multipart/form-data">
+        <div class="input-group row form__section ms-1">
+            <label asp-for="faxBetweenBranches.Date" class="form-label col-md-3
+                col-xs-12">تاريخ المكاتبة</label>
+            @{
+                string faxDate =
+                Model.faxBetweenBranches.Date.ToString("dd/MM/yyyy");
+                <input class="col-md-3 col-xs-12 p-1 form-control" value="@faxDate"
+                    readonly />
+            }
+            @Html.HiddenFor(x=>x.faxBetweenBranches.Date)
+            @Html.HiddenFor(x=>x.faxBetweenBranches.ID)
+            <span class="col-md-7 col-xs-12"></span>
+        </div>
+        <div class="input-group row form__section ms-1">
+            <label asp-for="faxBetweenBranches.RegistrationNum"
+                class="form-label col-md-3 col-xs-12">
+                رقم
+                القيد</label>
+            <input type="text" asp-for="faxBetweenBranches.RegistrationNum"
+                class="col-md-6 col-xs-12 form-control"
+                readonly />
+            <span asp-validation-for="faxBetweenBranches.RegistrationNum"
+                class="text-danger col-md-3 col-xs-12"></span>
+        </div>
+        <div class="input-group col-12 form__section">
+            <label asp-for="Branches" class="form-label col-md-3 col-xs-12">الأفرع
+                المرسل
+                إليها</label>
+            @{
+                string ids = "";
+                @foreach (var item in ViewBag.SelectedBranches)
+                {
+                    ids += item + "-";
+                }
+            }
+            <select id="branches" asp-for="Branches" class="col-md-6 col-xs-12"
+                asp-items="ViewBag.ReciverBranchID"
+                data-placeholder="رجاء إختيار الفرع" data-ids="@ids" multiple></select>
+            <span asp-validation-for="Branches" class="text-danger col-md-3
+                col-xs-12"></span>
+        </div>
+        <div class="input-group row form__section ms-1">
+            <label asp-for="faxBetweenBranches.Subject" class="form-label
+                col-md-3 col-xs-12">الموضوع</label>
+            <textarea asp-for="faxBetweenBranches.Subject" class="form-control
+                col-md-6 col-xs-12" lang="ar"
+                rows="3"></textarea>
+            <span asp-validation-for="faxBetweenBranches.Subject"
+                class="text-danger col-md-3 col-xs-12"></span>
+        </div>
+        <div class="input-group row form__section ms-1">
+            <label asp-for="faxBetweenBranches.FaxLinks" class="form-label
+                col-md-3 col-xs-12">
+                إرفاق صور
+                المكاتبة</label>
+            <input type="file" asp-for="faxBetweenBranches.FaxLinks"
+                name="files" id="FaxLink"
+                class="col-md-6 col-xs-12 form-control" multiple accept=".pdf,
+                image/*" />
+            <span asp-validation-for="faxBetweenBranches.FaxLinks"
+                class="text-danger col-md-3 col-xs-12"></span>
+        </div>
+        <div class="input-group row form__section ms-1">
+            <label asp-for="faxBetweenBranches.Notes" class="form-label col-md-3
+                col-xs-12">ملاحظات</label>
+            <textarea asp-for="faxBetweenBranches.Notes" class="form-control
+                col-md-6 col-xs-12" lang="ar"
+                rows="3"></textarea>
+            <span asp-validation-for="faxBetweenBranches.Notes"
+                class="text-danger col-md-3 col-xs-12"></span>
+        </div>
+        <div class="row mt-4 mb-3 d-flex justify-content-evenly
+            align-items-center">
+            <input type="submit" value="حفظ المكاتبة" class="btn btn-success
+                w-25" />
+        </div>
+    </form>
+</div>
+<script src="~/lib/multiselect/jquery-3.2.1.min.js"></script>
+<script src="~/lib/multiselect/chosen.jquery.min.js"></script>
+<script>
+    $("#branches").chosen({ no_results_text: "لم يتم العثور على الفرع", rtl: true });
+    let ids = $('#branches').attr("data-ids").split('-');
+    ids.pop();
+    ids = ids.map(x => +x);
+    $("#branches").val(ids).trigger("chosen:updated");
+</script>

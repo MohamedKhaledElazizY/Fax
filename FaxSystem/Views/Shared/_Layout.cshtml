@@ -1,0 +1,287 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - منظومة الأرشيف والمتابعة</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @* custom css files *@
+    <link rel="stylesheet" href="~/css/home.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/login.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Fax/Create.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Decision/Create.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/layout.css" asp-append-version="true" />
+    @* custom css files *@
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/fonts/bootstrap-icons.woff" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/fonts/bootstrap-icons.woff2" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" />
+    <link rel="icon" href="~/logo.png" />
+
+</head>
+
+<body>
+    
+    <header>
+        <nav class="navbar navbar-dark bg-dark navbar-expand-sm navbar-toggleable-sm border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">منظومة الأرشيف
+                    والمتابعة</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
+                    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        @{
+                            List<int> roles = ((IEnumerable<int>)TempData.Peek("roles")).ToList();//(List<int>)ViewData["roles"];
+                            int NumberOfSuspendedFaxes = (int)TempData.Peek("NumberOfSuspendedFaxes");
+                            
+                        }
+                        @if (roles.Contains(1) || roles.Contains(1006))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
+                               aria-haspopup="true" aria-expanded="false">شاشات التكويد</a>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item" asp-controller="Branches" asp-action="Create">تكويد الأفرع</a>
+                                    <div class="dropdown-divider"></div>
+                                    <a class="dropdown-item" asp-controller="Agencies" asp-action="Create">تكويد الجهات</a>
+                                </div>
+                            </li>
+                        }
+                        @if (roles.Contains(1) || roles.Contains(3))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Faxes" asp-action="Create">إدخال مكاتبة</a>
+                            </li>
+                        }
+
+                        @if (!(roles.Contains(4) || roles.Contains(5)))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="FaxBetweenBranches" asp-action="Create">أرسال مكاتبة بين الأفرع والأقسام</a>
+                            </li>
+                            
+                        }
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
+                                aria-haspopup="true" aria-expanded="false">الأرشيف </a>
+                            <div class="dropdown-menu navbar__dropdown">
+                                @if (!(roles.Contains(4) || roles.Contains(5)))
+                                {
+                                    <a class="dropdown-item" asp-controller="Faxes" asp-action="Archive">
+                                        أرشيف
+                                        المكاتبات
+                                        <span class="badge bg-danger rounded-5" id="numberOfFaxesCount"></span>
+                                    </a>
+                                    <div class="dropdown-divider"></div>
+                                }
+                                @if (roles.Contains(1) || roles.Contains(3) || roles.Contains(4) || roles.Contains(5))
+                                {
+                                    <a class="dropdown-item" asp-area="" asp-controller="Archive" asp-action="SuspendeArchive">
+                                        المكاتبات المعلقة
+                                        <span class="badge bg-danger rounded-circle" id="suspendedFaxesCountDropDown"></span>
+                                    </a>
+                                    @if (roles.Contains(1) || roles.Contains(4) || roles.Contains(5))
+                                    {
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item" asp-area="" asp-controller="Archive" asp-action="DecisionTokenArchive">
+                                            المكاتبات المتخذ فيها قرار
+                                        </a>
+                                    }
+                                }
+                                @if (!(roles.Contains(4) || roles.Contains(5)))
+                                {
+                                    <div class="dropdown-divider"></div>
+                                    <a class="dropdown-item" asp-controller="FaxBetweenBranches"
+                                    asp-action="Archive">
+                                        مكاتبات
+                                        بين الأفرع
+                                        <span class="badge bg-danger rounded-5" id="numberOfBranchFaxesCount"></span>
+                                    </a>
+                                }
+                            </div>
+                        </li>
+
+                        <div class="d-flex align-items-center me-md-3 suspended__icon_wrapper">
+                            @if (roles.Contains(1) || roles.Contains(3) || roles.Contains(4) || roles.Contains(5))
+                            {
+                                <a class="badge bg-danger rounded-5 text-decoration-none" title="أرشيف المكاتبات المعلقة" asp-controller="Archive"
+                                    asp-action="SuspendeArchive">
+                                    <i class="bi bi-envelope-paper text-white suspended__icon"></i>
+                                    <span id="suspendedFaxesCountNav"></span>
+                                </a>
+
+                            }
+                        </div>
+                    </ul>
+                    <ul class="navbar-nav d-flex">
+                        @if (roles.Contains(1))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="UserRoles" asp-action="Index">
+                                    تعديل
+                                    الصلاحيات
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Register" asp-action="Register">تسجيل
+                                    مستخدم</a>
+                            </li>
+                        }
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="LogOut">تسجيل الخروج</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <audio src="~/notification1.wav" id="notifactionAudio" hidden></audio>
+    </header>
+    
+    <div class="container-md">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/signalr/dist/browser/signalr.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        if (@((( roles.Contains(4) || roles.Contains(5))) ? 1 : 0) == 1) {
+            if (@(ViewData["suspage"]==null?1:0) ==1) {
+                
+                var connection = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
+
+                connection.start().then(function () {
+                }).catch(function (err) {
+                    return console.error(err.toString());
+                });
+                
+                connection.on("ReceiveMessage", function (user, message,id,type) {
+                    console.log("!");
+                    var a = @((roles.Contains(1) || roles.Contains(4) || roles.Contains(5))? 1 : 0);
+                    
+                    if(a==1){
+                        const audio = document.getElementById("notifactionAudio");
+                        audio.play();
+                        $.ajax({
+                            type: "POST",
+                            url: "/Home/numofsus",
+                            data: {},
+                            success: function (data) {
+                                console.log(data);
+                                var a = data;
+                                document.getElementById("suspendedFaxesCountDropDown").innerText = a ;
+                                document.getElementById("suspendedFaxesCountNav").innerText = a ;
+                            }
+                        });
+                    }
+                });
+            }
+            
+            $.ajax({
+                type: "POST",
+                url: "/Home/numofsuarc",
+                data: {},
+                success: function (data) {
+                    console.log(data);
+                    var a = data;
+                    if(a!=0){
+                        document.getElementById("suspendedFaxesCountDropDown").innerText = a;
+                        document.getElementById("suspendedFaxesCountNav").innerText = a;
+                    }
+                    else{
+                        document.getElementById("suspendedFaxesCountDropDown").innerText = "";
+                        document.getElementById("suspendedFaxesCountNav").innerText = "";
+                    }
+                }
+            });
+        }
+    </script>
+    <script>
+        if (@(((roles.Contains(4) || roles.Contains(5))) ? 0 : 1) == 1) {
+            $.ajax({
+                type: "POST",
+                url: "/Home/numoffaxes",
+                data: { showNotification: false },
+                success: function (data) {
+                    document.getElementById("numberOfFaxesCount").innerHTML = data;
+                }
+            });
+        
+            $.ajax({
+                type: "POST",
+                url: "/Home/numoffaxesbranches",
+                data: { showNotification: false },
+                success: function (data) {
+                    document.getElementById("numberOfBranchFaxesCount").innerHTML = data;
+                }
+            });
+
+            if (@((ViewData["suspagearc1"] == null || ViewData["suspagearc2"] == null) ? 1 : 0) == 1) {
+                var connectionSusPages = new signalR.HubConnectionBuilder().withUrl("/cHub").build();
+
+                connectionSusPages.start().then(function () { }).catch(function (err) {
+                    return console.error(err.toString());
+                });
+
+                connectionSusPages.on("ReceiveMessage", function (id, type) {
+                    if(@((ViewData["suspagearc1"] == null) ? 1 : 0) == 1 && type==1){
+                        $.ajax({
+                            type: "POST",
+                            url: "/Home/checkbranch",
+                            data: { id, type },
+                            success: function (show) {
+                                if (show) {
+                                    const audio = document.getElementById("notifactionAudio");
+                                    audio.play();
+                                    $.ajax({
+                                        type: "POST",
+                                        url: "/Home/numoffaxes",
+                                        data: {},
+                                        success: function (data) {
+                                            document.getElementById("numberOfFaxesCount").innerHTML = data;
+                                        }
+                                    });
+                                }
+                            }
+                        });
+                    }
+
+                    if(@((ViewData["suspagearc2"] == null) ? 1 : 0) == 1 && type==2){
+                        $.ajax({
+                            type: "POST",
+                            url: "/Home/checkbranch",
+                            data: { id, type },
+                            success: function (show) {
+                                if (show) {
+                                    const audio = document.getElementById("notifactionAudio");
+                                    audio.play();
+                                    $.ajax({
+                                        type: "POST",
+                                        url: "/Home/numoffaxesbranches",
+                                        data: {},
+                                        success: function (data) {
+                                            document.getElementById("numberOfBranchFaxesCount").innerHTML = data;
+                                        }
+                                    });
+                                }
+                            }
+                        });
+                    }
+                });
+            }        
+        }
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+    @await Component.InvokeAsync("NToastNotify")
+</body>
+
+</html>

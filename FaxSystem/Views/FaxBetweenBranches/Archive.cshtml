@@ -1,0 +1,258 @@
+﻿@model ArchPar
+@{
+
+    ViewData["Title"] = "مكاتبات الأفرع";
+}
+
+<form asp-controller="FaxBetweenBranches" asp-action="Archive" id="searchForm">
+    <div class="d-flex justify-content-start align-items-start">
+        <div class="d-flex justify-content-start align-items-center mb-3 w-50">
+            <label for="EntryNumSearch" class="form-label ms-2 col-2">رقم القيد</label>
+            <input type="search" asp-for="EntryNumSearch" class="form-control
+                w-50">
+        </div>
+        <div class="d-flex justify-content-start align-items-center mb-3 w-50">
+            <label for="SubjectSearch" class="form-label ms-2 col-2">الموضوع</label>
+            <input type="search" asp-for="SubjectSearch" class="form-control
+                w-50">
+        </div>
+    </div>
+    <div class="d-flex justify-content-start align-items-start">
+        <div class="d-flex justify-content-start align-items-center mb-3 w-50">
+            <label for="SenderBranchSearch" class="form-label ms-2 col-2">الفرع</label>
+            <select class="form-select w-50" asp-for="BranchID"
+                asp-items="ViewBag.BranchID">
+                <option value="">اختر الفرع</option>
+            </select>
+        </div>
+    </div>
+    <div class=" d-flex flex-column justify-content-start align-items-start">
+        <label class="form-label">البحث بتاريخ الفاكس</label>
+        <div class="d-flex w-100 mb-3">
+            <div class="d-flex w-50">
+                <label for="StartDate" class="form-label ms-2 col-2">تاريخ
+                    البداية</label>
+                <input type="date" asp-for="StartDate" class="form-control
+                    w-50">
+            </div>
+            <div class="d-flex w-50">
+                <label for="EndDate" class="form-label ms-2 col-2">تاريخ النهاية</label>
+                <input type="date" asp-for="EndDate" class="form-control w-50">
+            </div>
+        </div>
+    </div>
+    <input type="submit" value="البحث" class="btn btn-secondary col-2">
+    <input type="button" onclick="clearSearchConditions();" class="btn
+        btn-outline-secondary col-2" value="إلغاء شروط البحث">
+</form>
+
+<div class="table-responsive mt-3 wrapper me-0 ms-0">
+    <table class="table table-striped-columns overflow-auto">
+        <thead>
+            <tr>
+                <th>الموضوع</th>
+                <th>رقم القيد</th>
+                <th>الأفرع المستلمة</th>
+                <th>التاريخ</th>
+                <th>الخيارات</th>
+            </tr>
+        </thead>
+        <tbody class="table-group-divider" id="faxBetweenBranchesArchiveTable">
+            @foreach (var obj in Model.BranchFaxesToBranch)
+            {
+                @await Component.InvokeAsync("FaxBranchTableRow", new
+            {faxBetweenBranches = obj , CanEdit = (Boolean.Parse(ViewData["CanEditFaxBranch"].ToString()) && (obj.SenderBranchID == int.Parse(ViewData["CanEditFaxBranchUserBranchID"].ToString()))),
+            CanSuspend = ViewData["CanSuspendFaxBranch"], IsSuspended = false })
+            }
+        </tbody>
+    </table>
+</div>
+
+<script src="~/js/signalr/dist/browser/signalr.js"></script>
+<script>
+    var connectionFaxBranchArchive2 = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
+
+    connectionFaxBranchArchive2.start().then(function () {
+        if (@ViewData["ress"] != -1) {
+            connectionFaxBranchArchive2.invoke("SendMessage", "11", "11", @ViewData["ress"], 2).catch(function (err) {
+                return console.error(err.toString());
+            });
+        }
+    }).catch(function (err) {
+        return console.error(err.toString());
+    });
+    
+    var connectionFaxBranchArchive1 = new signalR.HubConnectionBuilder().withUrl("/cHub").build();
+
+    connectionFaxBranchArchive1.start().then(function () { }).catch(function (err) {
+        return console.error(err.toString());
+    });
+
+    connectionFaxBranchArchive1.on("ReceiveMessage", function (id, type) {
+        if(type == 2){
+            $.ajax({
+                type: "POST",
+                url: "/Home/checkbranch",
+                data: { id, type },
+                success: function (show) {
+                    if(show){
+                        const audio = document.getElementById("notifactionAudio");
+                        audio.play();
+                        $.ajax({
+                            type: "POST",
+                            url: "/Archive/sendfaxbranches",
+                            data: { id, type },
+                            success: function (data) {
+                                data = data.replaceAll('td', 'th');
+                                let newRow = document.createElement("tr");
+                                newRow.innerHTML = data;
+                                newRow.classList.add("table-info");
+                                document.getElementById("faxBetweenBranchesArchiveTable").prepend(newRow);
+                                $.ajax({
+                                    type: "POST",
+                                    url: "/Home/numoffaxesbranches",
+                                    data: { showNotification: false },
+                                    success: function (data) {
+                                        document.getElementById("numberOfBranchFaxesCount").innerHTML = data;
+                                    }
+                                });
+                            }
+                        });
+                    }
+                }
+            });
+        }
+    });
+</script>
+<script>
+    function clearSearchConditions() {
+        location.href = location.href.split("?")[0];
+    }
+
+    function isImgUrl(url) {
+        return /\.(jpg|jpeg|png|webp|avif|gif)$/.test(url)
+    }
+
+    let branchFaxToBranchDetailsModal = document.getElementById("branchFaxToBranchModal");
+    branchFaxToBranchDetailsModal?.addEventListener('show.bs.modal', event => {
+        const button = event.relatedTarget;
+        const faxData = branchFaxToBranchDetailsModal.querySelector('.modal-body tbody tr').children;
+        faxData[0].innerHTML = button.getAttribute('data-bs-RegistrationNum');
+        faxData[1].innerHTML = button.getAttribute('data-bs-SenderBranch');
+        faxData[3].innerHTML = button.getAttribute('data-bs-Subject');
+        faxData[4].innerHTML = button.getAttribute('data-bs-Date');
+        faxData[5].innerHTML = button.getAttribute('data-bs-Notes');
+
+        faxData[2].innerHTML = "";
+        faxData[2].setAttribute('class', 'list-group list-group-numbered');
+        let receivers = button.getAttribute('data-bs-ReceiverBranches').split('-');
+        receivers.pop();
+        receivers.forEach((name) => {
+            let item = document.createElement('li');
+            item.innerHTML = name;
+            item.setAttribute('class', 'list-group-item');
+            faxData[2].appendChild(item);
+        })
+
+        let imagesContainer = branchFaxToBranchDetailsModal.querySelector('#branchFaxToBranchImagesContainer');
+        imagesContainer.innerHTML = "";
+        const links = button.getAttribute('data-bs-FaxLinks').split('?');
+        let branchFaxToBranchFileContainer = document.getElementById("branchFaxToBranchFileContainer");
+        if(links[0]){
+            if(isImgUrl(links[0])){
+                branchFaxToBranchFileContainer.innerText = "";
+                links.pop();
+                links.forEach((link) => {
+                    let image = document.createElement('img');
+                    image.src = "/StaticFiles/" + link;
+                    image.setAttribute("class", "fax__image");
+                    image.setAttribute("loading", "lazy");
+                    imagesContainer.appendChild(image);
+                })
+            } else {
+                branchFaxToBranchFileContainer.innerText = "تحميل ملف المكاتبة";
+                branchFaxToBranchFileContainer.href = branchFaxToBranchFileContainer.href.split('?')[0];
+                branchFaxToBranchFileContainer.href = branchFaxToBranchFileContainer.href + `?a=${links[0]}`;
+            }
+        }
+    })
+
+    let decisionDetailsModal = document.getElementById("decisionDetailsModal");
+    decisionDetailsModal?.addEventListener('show.bs.modal', event => {
+        const button = event.relatedTarget;
+        let checkboxData = decisionDetailsModal.querySelectorAll('.modal-body input[type="checkbox"]');
+        checkboxData[0].checked = button.getAttribute('data-bs-PersonalReview') == "True";
+        checkboxData[1].checked = button.getAttribute('data-bs-DecisionCheck') == "True";
+
+        let textData = decisionDetailsModal.querySelectorAll('input[type="text"]');
+        let opinionVoice = decisionDetailsModal.querySelector('#opinionVoiceModal');
+        let decisionVoice = decisionDetailsModal.querySelector('#decisionVoiceModal');
+        let notfoundData = decisionDetailsModal.querySelectorAll('span.form-label');
+
+        if (button.getAttribute('data-bs-Opinion')) {
+            textData[0].classList.remove('d-none');
+            textData[0].value = button.getAttribute('data-bs-Opinion');
+            notfoundData[0].classList.add('d-none');
+        } else {
+            notfoundData[0].classList.remove('d-none');
+            textData[0].classList.add('d-none');
+        }
+
+        if (button.getAttribute('data-bs-OpinionVoice')) {
+            opinionVoice.src = `/StaticFiles/${button.getAttribute('data-bs-OpinionVoice')}`;
+            opinionVoice.classList.remove('d-none');
+            notfoundData[1].classList.add('d-none');
+        } else {
+            notfoundData[1].classList.remove('d-none');
+            opinionVoice.classList.add('d-none');
+            opinionVoice.src = "";
+        }
+
+        if (button.getAttribute('data-bs-DecisionText')) {
+            textData[1].classList.remove('d-none');
+            textData[1].value = button.getAttribute('data-bs-DecisionText');
+            notfoundData[2].classList.add('d-none');
+        } else {
+            notfoundData[2].classList.remove('d-none');
+            textData[1].classList.add('d-none');
+        }
+
+        if (button.getAttribute('data-bs-DecisionVoice')) {
+            decisionVoice.src = `/StaticFiles/${button.getAttribute('data-bs-DecisionVoice')}`;
+            decisionVoice.classList.remove('d-none');
+            notfoundData[3].classList.add('d-none');
+        } else {
+            notfoundData[3].classList.remove('d-none');
+            decisionVoice.classList.add('d-none');
+            decisionVoice.src = "";
+        }
+    })
+
+    window.onload = () => {
+        const showDecisionbuttons = document.querySelectorAll('button[data-bs-DecisionVoice]');
+        const audios = document.querySelectorAll('audio[name="tableRecordVoice"]');
+        showDecisionbuttons.forEach((btn, idx) => {
+            if (btn.getAttribute("data-bs-DecisionVoice") && audios[idx]) {
+                audios[idx].src = `/StaticFiles/${btn.getAttribute("data-bs-DecisionVoice")}`;
+            } else {
+                audios[idx]?.remove();
+            }
+        });
+    }
+
+    let faxBranchReciversModal = document.getElementById("faxBranchReciversModal");
+    faxBranchReciversModal?.addEventListener('show.bs.modal', event => {
+        const button = event.relatedTarget;
+        const receiversContainer = faxBranchReciversModal.querySelector('.modal-body');
+        receiversContainer.innerHTML = "";
+        const receivers = button.getAttribute('data-bs-receivers').split('-');
+        receivers.pop();
+        receivers.forEach((elm, idx) => {
+            let breakLine = document.createElement('br');
+            let element = document.createElement('span');
+            element.innerHTML = (idx + 1) + "- " + elm;
+            receiversContainer.appendChild(element);
+            receiversContainer.appendChild(breakLine);
+        })
+    })
+</script>

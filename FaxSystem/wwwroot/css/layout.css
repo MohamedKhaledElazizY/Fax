@@ -1,0 +1,19 @@
+.layout__footer {
+    bottom: 0;
+}
+
+.wrapper{
+    padding-bottom: 10rem;
+}
+
+.navbar__dropdown{
+    width: max-content;
+}
+
+.suspended__icon_wrapper{
+    font-size: 1.3rem;
+}
+
+.suspended__icon{
+    font-size: 1.5rem;
+}

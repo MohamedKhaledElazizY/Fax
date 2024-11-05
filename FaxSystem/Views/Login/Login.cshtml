@@ -1,0 +1,40 @@
+﻿@model FaxSystem.Models.User
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/login.css" asp-append-version="true" />
+    <link rel="icon" href="~/logo.png" />
+    <title>تسجيل الدخول - منظومة الفاكسات</title>
+</head>
+
+<body class="login__body">
+    <main class="login__main container-md" w-100 m-auto">
+        <form class="login__form" asp-controller="Login" asp-action="Login" method="post">
+            <img src="~/logo.png" alt ="شعار كلية الضباط الاحتياط" class="mb-3 mt-3 m-auto">
+            <partial name="_ResultMessage" />
+            <label class="mb-1" for="UserName">اسم المستخدم</label>
+            <input class="form-control mb-2" type="text" asp-for="UserName" id="UserName" />
+            <span asp-validation-for="UserName" class="text-danger"></span>
+
+            <label class="mb-1" for="Password">كلمة المرور</label>
+            <input class="form-control mb-2" type="password" asp-for="Password" id="Password" />
+            <span asp-validation-for="Password" class="text-danger"></span>
+
+            <button type="submit" class="w-100 btn btn-dark text-white mb-3 mt-3">تسجيل الدخول</button>
+            <p class="text-end text-secondary">هل نسيت كلمة المرور؟ قم بالتواصل مع قسم النظم لاسترجاع كلمة المرور الخاصة
+                بك
+            </p>
+        </form>
+    </main>
+</body>
+
+</html>

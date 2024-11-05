@@ -1,0 +1,652 @@
+﻿@model FaxSystem.Models.DecisionToBranches
+@{
+    ViewData["Title"] = "إدخال قرار";
+}
+<link rel="stylesheet" href="~/css/chosen.css">
+
+<div class="create__wrapper">
+    @{List<int> roles = (List<int>)ViewData["roles"];}
+    @if (Model.type == 1)
+    {
+        <div class="row">
+            <div class="d-flex justify-content-center mb-3">
+                <button type="button" class="btn btn-outline-secondary col-lg-3
+                col-md-4 col-sm-6" data-bs-toggle="modal"
+                    data-bs-target="#branchFaxToBranchModal">
+                    عرض تفاصيل المكاتبة
+                    <i class="bi bi-eye"></i>
+                </button>
+                <div class="modal fade" id="branchFaxToBranchModal"
+                    tabindex="-1" aria-labelledby="faxModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered
+                        modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header border-bottom-0">
+                                <h1 class="modal-title fs-5"
+                                    id="faxModalLabel">تفاصيل المكاتبة</h1>
+                                <button type="button" class="btn-close"
+                                    data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>رقم القيد</th>
+                                            <th>الفرع المرسل</th>
+                                            <th>الأفرع المستلمة</th>
+                                            <th>الموضوع</th>
+                                            <th>التاريخ</th>
+                                            <th>الملاحظات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>@Model.faxBetweenBranches.RegistrationNum</td>
+                                            <td>@Model.faxBetweenBranches.senderBranch.Name</td>
+                                            <td class="list-group list-group-numbered">
+                                                @foreach (var receiver in @Model.faxBetweenBranches.BranchFaxRecivers)
+                                                {
+                                                    <li class="list-group-item">@receiver.branch.Name</li>
+                                                }
+                                            </td>
+                                            <td>@Model.faxBetweenBranches.Subject</td>
+                                            <td>@Model.faxBetweenBranches.Date.Day/@Model.faxBetweenBranches.Date.Month/@Model.faxBetweenBranches.Date.Year</td>
+                                            <td>@Model.faxBetweenBranches.Notes</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                @if(@Model.faxBetweenBranches.FaxLinks is string)
+                                {
+                                    <a class="btn btn-link" asp-controller="Faxes" asp-action="fileurl" asp-route-a="@Model.faxBetweenBranches.FaxLinks" target="_blank">عرض ملف المكاتبة</a>
+                                }
+                                else
+                                {
+                                    <div class="d-flex overflow-auto">
+                                        @foreach (var faxLink in @Model.faxBetweenBranches.FaxLinks)
+                                        {
+                                            <img src="/StaticFiles/@faxLink" class="fax__image" />
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <form id="createForm" asp-controller="Decision" asp-action="Create"
+                enctype="multipart/form-data" class="mt-2 mb-1">
+                <div class="input-group row form__section ms-1">
+                    <label class="form-label col-md-3 col-xs-12">تاريخ المكاتبة</label>
+                    <input type="text" asp-for="faxBetweenBranches.Date"
+                        class="col-md-3 col-xs-12 p-1 form-control"
+                        id="faxDate" readonly />
+                    <span class="col-md-7 col-xs-12"></span>
+                </div>
+                <div class="input-group row form__section ms-1">
+                    <label class="form-label col-md-3 col-xs-12">الفرع
+                        المرسل</label>
+                    <input type="text"
+                    asp-for="faxBetweenBranches.senderBranch.Name"
+                        class="col-md-3 col-xs-12 p-1 form-control" lang="ar"
+                        readonly />
+                    <span class="col-md-7 col-xs-12"></span>
+                </div>
+                <div class="input-group row form__section ms-1">
+                    <label class="form-label col-md-3 col-xs-12">موضوع المكاتبة</label>
+                    <textarea asp-for="faxBetweenBranches.Subject"
+                        class="form-control col-md-6 col-xs-12" lang="ar"
+                        rows="3" value="faxBetweenBranches.Subject" readonly></textarea>
+                    <span class="col-md-4 col-xs-12"></span>
+                </div>
+                @* authorize here sub-manager *@
+                <div class="input-group row form__section ms-1">
+                    <label class="form-label col-md-3 col-xs-12">رأي نائب المدير</label>
+                    @if (roles.Contains(1) || roles.Contains(5))
+                    {
+                        <textarea asp-for="faxBetweenBranches.decision.Opinion"
+                            class="form-control col-md-6 col-xs-12"
+                            lang="ar" rows="3"></textarea>
+                    }
+                    else
+                    {
+                        <textarea asp-for="faxBetweenBranches.decision.Opinion"
+                            class="form-control col-md-6 col-xs-12"
+                            lang="ar" rows="3" readonly></textarea>
+                        @if (@Model.faxBetweenBranches.decision != null&&@Model.faxBetweenBranches.decision.OpinionVoice != null)
+                        {
+                            <audio id="audioOpinion" class="m-2 w-50" controls src="/StaticFiles/@Model.faxBetweenBranches.decision.OpinionVoice"></audio>
+                        }
+                    }
+                    <span class="col-md-4 col-xs-12"></span>
+                </div>
+                @if (roles.Contains(1) || roles.Contains(5))
+                {
+                    <div class="d-flex flex-column ms-1">
+                        <div class="d-flex ms-1">
+                            <label class="form-label col-md-3 col-xs-12">
+                                تعليق
+                                صوتي
+                            </label>
+                            <div class="form__section col-md-6 col-xs-12 ms-3">
+                                <button type="button" class="btn btn-sm btn-danger m-2" id="startOpinionRecord">
+                                    تسجيل
+                                    صوتي
+                                </button>
+                                <button type="button" class="btn btn-sm btn-warning m-2" id="stopOpinionRecord">
+                                    إيقاف
+                                    التسجيل
+                                </button>
+                            </div>
+                        </div>
+                        <span id="recordingOpinionText" class="text-center col-12"></span>
+                    </div>
+                    <div class="form__section ms-1">
+                        <button type="button" class="btn btn-success m-2" id="saveOpinionRecord">
+                            حفظ
+                            التعليق
+                        </button>
+                        <div>
+                            <audio id="audioOpinion" class="m-2" controls src=""></audio>
+                        </div>
+                    </div>
+                    <input id="opinionVoice" asp-for="faxBetweenBranches.decision.OpinionVoice" type="text" hidden/>
+                }
+                <hr class="bg-dark mb-3" />
+                @* authorize here manager *@
+                <section class="input-group bg-light flex-column p-2 mb-5">
+                    @if (roles.Contains(1) || roles.Contains(4))
+                    {
+                        <div class="input-group row form__section ms-1">
+                            <label class="form-label col-md-3 col-xs-12">
+                                قرار السيد
+                                المدير
+                            </label>
+                            <textarea asp-for="faxBetweenBranches.decision.DecisionText"
+                                class="form-control col-md-6 col-xs-12"
+                                lang="ar" rows="3"></textarea>
+                            <span class="col-md-4 col-xs-12"></span>
+                        </div>
+                        <div class="form-check ms-1 mb-3">
+                            <label class="form-label">أوافق</label>
+                            <input asp-for="faxBetweenBranches.decision.DecisionCheck"
+                                class="form-check-input" type="checkbox">
+                        </div>
+                        <div class="form-check ms-1 mb-3">
+                            <label class="form-label">عرض شخصي </label>
+                            <input asp-for="faxBetweenBranches.decision.PersonalReview"
+                                class="form-check-input" type="checkbox">
+                        </div>
+                        <div class="d-flex flex-column ms-1">
+                            <div class="d-flex ms-1">
+                                <label class="form-label col-md-3 col-xs-12">
+                                    تعليق
+                                    صوتي
+                                </label>
+                                <div class="form__section col-md-6 col-xs-12 ms-3">
+                                    <button type="button" class="btn btn-sm btn-danger m-2" id="startDecisionRecord">
+                                        تسجيل
+                                        صوتي
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-warning m-2" id="stopDecisionRecord">
+                                        إيقاف
+                                        التسجيل
+                                    </button>
+                                </div>
+                            </div>
+                            <span id="recordingDecisionText" class="text-center col-12"></span>
+                        </div>
+                        <div class="form__section ms-1">
+                            <button type="button" class="btn btn-success m-2" id="saveDecisionRecord">
+                                حفظ
+                                التعليق
+                            </button>
+                            <div>
+                                <audio id="audioDecision" class="m-2" controls src=""></audio>
+                            </div>
+                        </div>
+                        <input id="decisionVoice" asp-for="faxBetweenBranches.decision.DecisionVoice" type="text" hidden/>
+                    }
+                </section>
+                @*///////////////////////////////////////////////////////////////////////////////////*@
+                @* authorize here manager *@
+                @if (roles.Contains(1) || roles.Contains(4))
+                {
+                    <button type="submit" id="decideButton" class="col-md-2 col-xs-12 btn btn-dark text-white mb-3">
+                        اتخاذ قرار
+                    </button>
+                }
+                else if (roles.Contains(1) || roles.Contains(5))
+                {
+                    <button type="submit" class="col-md-2 col-xs-12 btn btn-dark text-white mb-3">
+                        ابداء الرأي
+                    </button>
+                }
+                
+
+                @Html.HiddenFor(x=>x.type)
+                @Html.HiddenFor(x=>x.faxBetweenBranches.ID)
+                @Html.HiddenFor(x=>x.faxBetweenBranches.FaxLinks)
+                @Html.HiddenFor(x=>x.faxBetweenBranches.SenderBranchID)
+                @Html.HiddenFor(x=>x.faxBetweenBranches.Notes)
+                @Html.HiddenFor(x=>x.faxBetweenBranches.RegistrationNum)
+                @Html.HiddenFor(x=>x.faxBetweenBranches.suspend)
+                @Html.HiddenFor(x=>x.faxBetweenBranches.DecisionID)
+            </form>
+        </div>
+    }
+
+    @if (Model.type == 2)
+    {
+        <div class="row">
+            <div class="d-flex justify-content-center mb-3">
+                <button type="button" class="btn btn-outline-secondary col-lg-3
+                col-md-4 col-sm-6" data-bs-toggle="modal"
+                    data-bs-target="#branchFaxModal">
+                    عرض تفاصيل المكاتبة
+                    <i class="bi bi-eye"></i>
+                </button>
+                <div class="modal fade" id="branchFaxModal" tabindex="-1"
+                    aria-labelledby="faxModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered
+                    modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header border-bottom-0">
+                                <h1 class="modal-title fs-5" id="faxModalLabel">تفاصيل
+                                    المكاتبة</h1>
+
+                                <button type="button" class="btn-close"
+                                    data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>رقم القيد</th>
+                                            <th>الجهة المرسلة</th>
+                                            <th>الموضوع</th>
+                                            <th>التاريخ</th>
+                                            <th>الملاحظات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>@Model.fax.RegistrationNum</td>
+                                            <td>@Model.fax.senderAgency.Name</td>
+                                            <td>@Model.fax.Subject</td>
+                                            <td>@Model.fax.Date.Day/@Model.fax.Date.Month/@Model.fax.Date.Year
+                                            </td>
+                                            <td>@Model.fax.Notes</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="d-flex overflow-auto">
+                                    @* images shown here *@
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <form id="createForm" asp-controller="Decision" asp-action="Create"
+                enctype="multipart/form-data" class="mt-2 mb-1">
+                <div class="input-group row form__section ms-1">
+                    <label class="form-label col-md-3 col-xs-12">تاريخ المكاتبة</label>
+                    <input type="text" asp-for="fax.Date" class="col-md-3 col-xs-12
+                    p-1 form-control" id="faxDate" readonly />
+                    <span class="col-md-7 col-xs-12"></span>
+                </div>
+                <div class="input-group row form__section ms-1">
+                    <label for="fax.senderAgency" class="form-label col-md-3
+                    col-xs-12">الجهة المرسلة</label>
+                    <input type="text" asp-for="fax.SenderAgencyName"
+                        class="col-md-3 col-xs-12 p-1 form-control" lang="ar"
+                        readonly />
+                    <span class="col-md-7 col-xs-12"></span>
+                </div>
+                <div class="input-group row form__section ms-1">
+                    <label for="fax.Subject" class="form-label col-md-3 col-xs-12">موضوع
+                        المكاتبة</label>
+                    <textarea asp-for="fax.Subject" class="form-control col-md-6
+                    col-xs-12" lang="ar" rows="3" value="fax.Subject" readonly></textarea>
+                    <span class="col-md-4 col-xs-12"></span>
+                </div>
+                @* authorize here sub-manager *@
+                <div class="input-group row form__section ms-1">
+                    <label for="fax.decision.Opinion" class="form-label col-md-3
+                    col-xs-12">رأي نائب المدير</label>
+                    @if (roles.Contains(1) || roles.Contains(5))
+                    {
+                        <textarea asp-for="fax.decision.Opinion"
+                            class="form-control col-md-6 col-xs-12" lang="ar" rows="3"></textarea>
+                    }
+                    else
+                    {
+                        <textarea asp-for="fax.decision.Opinion"
+                            class="form-control col-md-6 col-xs-12" lang="ar"
+                            rows="3" readonly></textarea>
+                        @if (@Model.fax.decision != null&&@Model.fax.decision.OpinionVoice != null)
+                        {
+                            <audio id="audioOpinion" class="m-2 w-50" controls src="/StaticFiles/@Model.fax.decision.OpinionVoice"></audio>
+                        }
+                    }
+                    <span class="col-md-4 col-xs-12"></span>
+                </div>
+                @if (roles.Contains(1) || roles.Contains(5))
+                {
+                    <div class="d-flex flex-column ms-1">
+                        <div class="d-flex ms-1">
+                            <label class="form-label col-md-3 col-xs-12">
+                                تعليق
+                                صوتي
+                            </label>
+                            <div class="form__section col-md-6 col-xs-12 ms-3">
+                                <button type="button" class="btn btn-sm btn-danger m-2" id="startOpinionRecord">
+                                    تسجيل
+                                    صوتي
+                                </button>
+                                <button type="button" class="btn btn-sm btn-warning m-2" id="stopOpinionRecord">
+                                    إيقاف
+                                    التسجيل
+                                </button>
+                            </div>
+                        </div>
+                        <span id="recordingOpinionText" class="text-center col-12"></span>
+                    </div>
+                    <div class="form__section ms-1">
+                        <button type="button" class="btn btn-success m-2" id="saveOpinionRecord">
+                            حفظ
+                            التعليق
+                        </button>
+                        <div>
+                            <audio id="audioOpinion" class="m-2" controls src=""></audio>
+                        </div>
+                    </div>
+                    <input id="opinionVoice" asp-for="fax.decision.OpinionVoice" type="text" hidden/>
+                }
+                <hr class="bg-dark mb-3" />
+                @* authorize here manager *@
+                <section class="input-group bg-light flex-column p-2 mb-5">
+                    @if (roles.Contains(1) || roles.Contains(4))
+                    {
+                        <div class="input-group row form__section ms-1">
+                            <label class="form-label col-md-3 col-xs-12">
+                                قرار السيد
+                                المدير
+                            </label>
+                            <textarea asp-for="fax.decision.DecisionText"
+                                class="form-control col-md-6 col-xs-12" lang="ar"
+                                rows="3"></textarea>
+                            <span class="col-md-4 col-xs-12"></span>
+                        </div>
+                        <div class="form-check ms-1 mb-3">
+                            <label class="form-label">أوافق</label>
+                            <input asp-for="fax.decision.DecisionCheck"
+                                class="form-check-input" type="checkbox">
+                        </div>
+                        <div class="form-check ms-1 mb-3">
+                            <label class="form-label">عرض شخصي </label>
+                            <input asp-for="fax.decision.PersonalReview"
+                                class="form-check-input" type="checkbox">
+                        </div>
+                        <div class="d-flex flex-column ms-1">
+                            <div class="d-flex ms-1">
+                                <label class="form-label col-md-3 col-xs-12">
+                                    تعليق
+                                    صوتي
+                                </label>
+                                <div class="form__section col-md-6 col-xs-12 ms-3">
+                                    <button type="button" class="btn btn-sm btn-danger m-2" id="startDecisionRecord">
+                                        تسجيل
+                                        صوتي
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-warning m-2" id="stopDecisionRecord">
+                                        إيقاف
+                                        التسجيل
+                                    </button>
+                                </div>
+                            </div>
+                            <span id="recordingDecisionText" class="text-center col-12"></span>
+                        </div>
+                        <div class="form__section ms-1">
+                            <button type="button" class="btn btn-success m-2" id="saveDecisionRecord">
+                                حفظ
+                                التعليق
+                            </button>
+                            <div>
+                                <audio id="audioDecision" class="m-2" controls src=""></audio>
+                            </div>
+                        </div>
+                        <input id="decisionVoice" asp-for="fax.decision.DecisionVoice" type="text" hidden/>
+                        <div class="input-group row form__section ms-1">
+                            @{
+                                string ids = "";
+                                @foreach (var item in ViewBag.FaxRecivers)
+                                {
+                                    ids += item.Value + "-";
+                                }
+                            }
+                            <label class="form-label col-md-3 col-xs-12">
+                                الأفرع المرسل اليها
+                                المكاتبة
+                            </label>
+                            <div class="d-flex mb-2">
+                                <span>تحديد الكل</span>
+                                <input class="form-check-input me-5" type="checkbox" id="selectAllBranchesCheck">
+                            </div>
+                            <select id="receiverBranches" asp-for="Branches"
+                            asp-items="@ViewBag.FaxRecivers" data-ids="@ids" data-placeholder="رجاء إختيار الأفرع" multiple></select>
+                            <span class="col-md-7 col-xs-12"></span>
+                            <span asp-validation-for="Branches" class="text-danger"></span>
+                        </div>
+                    }
+                   
+                </section>
+                @*///////////////////////////////////////////////////////////////////////////////////*@
+                @* authorize here manager *@
+                @if (roles.Contains(1) || roles.Contains(4))
+                {
+                    <button type="submit" id="decideButton" class="col-md-2 col-xs-12 btn btn-dark text-white mb-3">
+                        اتخاذ قرار
+                    </button>
+                }
+                    else if (roles.Contains(1) || roles.Contains(5))
+                {
+                    <button type="submit" class="col-md-2 col-xs-12 btn btn-dark text-white mb-3">
+                        ابداء الرأي
+                    </button>
+                }
+                @Html.HiddenFor(x=>x.fax.ID)
+                @Html.HiddenFor(x=>x.fax.FaxLinks)
+                @Html.HiddenFor(x=>x.fax.SenderAgencyID)
+                @Html.HiddenFor(x=>x.fax.Notes)
+                @Html.HiddenFor(x=>x.fax.RegistrationNum)
+                @Html.HiddenFor(x=>x.type)
+                @Html.HiddenFor(x=>x.fax.suspend)
+                @Html.HiddenFor(x=>x.fax.DecisionID)
+            </form>
+        </div>
+    }
+</div>
+
+
+<script src="~/lib/multiselect/jquery-3.2.1.min.js"></script>
+<script src="~/lib/multiselect/chosen.jquery.min.js"></script>
+<script>
+    $("#receiverBranches").chosen({ no_results_text: "لم يتم العثور على الفرع", rtl: true });
+    document.getElementById('selectAllBranchesCheck')?.addEventListener('change', function (e) {
+        if(e.target.checked){
+            let ids = $('#receiverBranches').attr("data-ids").split('-');
+            ids.pop();
+            ids = ids.map(x => +x);
+            $("#receiverBranches").val(ids).trigger("chosen:updated");
+            $(".chosen-container").addClass('d-none');
+        } else {
+            $("#receiverBranches").val([]).trigger("chosen:updated");
+            $(".chosen-container").removeClass('d-none');
+        }
+    });
+
+    //------------------------- Voice Globals -------------------------
+    const startOpinionRecordButton = document.querySelector('#startOpinionRecord');
+    const stopOpinionRecordButton = document.querySelector('#stopOpinionRecord');
+    const saveOpinionRecordButton = document.querySelector("#saveOpinionRecord");
+    const audioOpinionPreview = document.querySelector("#audioOpinion");
+    let mediaOpinionRecorder, blobOpinion, opinionFileName, recordOpinionSaved = 0;
+    if(stopOpinionRecordButton)
+        stopOpinionRecordButton.disabled = true;
+
+    const startDecisionRecordButton = document.querySelector('#startDecisionRecord');
+    const stopDecisionRecordButton = document.querySelector('#stopDecisionRecord');
+    const saveDecisionRecordButton = document.querySelector("#saveDecisionRecord");
+    const audioDecisionPreview = document.querySelector("#audioDecision");
+    let mediaDecisionRecorder, blobDecision, decisionFileName, recordDecisionSaved = 0;
+    if(stopDecisionRecordButton)
+        stopDecisionRecordButton.disabled = true;
+
+    navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: false
+    })
+    .then(function (stream) {
+        if(startOpinionRecordButton)
+            startOpinionRecordButton.disabled = false;
+        startOpinionRecordButton?.addEventListener('click', startOpinionRecording);
+        stopOpinionRecordButton?.addEventListener('click', stopOpinionRecording);
+        saveOpinionRecordButton?.addEventListener('click', saveOpinionRecording);
+        mediaOpinionRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+        mediaOpinionRecorder?.addEventListener('dataavailable', onOpinionRecordingReady);
+
+        if(startDecisionRecordButton)
+            startDecisionRecordButton.disabled = false;
+        startDecisionRecordButton?.addEventListener('click', startDecisionRecording);
+        stopDecisionRecordButton?.addEventListener('click', stopDecisionRecording);
+        saveDecisionRecordButton?.addEventListener('click', saveDecisionRecording);
+        mediaDecisionRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+        mediaDecisionRecorder?.addEventListener('dataavailable', onDecisionRecordingReady);
+    });
+
+    //------------------------- Opinion Voice Handlers -------------------------
+    function startOpinionRecording() {
+        startOpinionRecordButton.disabled = true;
+        stopOpinionRecordButton.disabled = false;
+        recordOpinionSaved = 1;
+        console.log("recording opinion started");
+        mediaOpinionRecorder.start();
+        document.getElementById("recordingOpinionText").innerText = "جاري التسجيل...";
+    }
+
+    function stopOpinionRecording() {
+        startOpinionRecordButton.disabled = false;
+        stopOpinionRecordButton.disabled = true;
+        console.log("recording opinion stopped");
+        mediaOpinionRecorder.stop();
+        document.getElementById("recordingOpinionText").innerText = "";
+    }
+
+    function onOpinionRecordingReady(e) {
+        let chunks = [];
+        chunks.push(e.data);
+        blobOpinion = new Blob(chunks, { type: "audio/webm" });
+        audioOpinionPreview.src = window.URL.createObjectURL(blobOpinion);
+        audioOpinionPreview.play();
+        console.log("record opinion is ready");
+    };
+
+    function saveOpinionRecording() {
+        console.log("saving opinion record");
+        let reader = new window.FileReader();
+        reader.readAsDataURL(blobOpinion);
+        opinionFileName = `opinion_${(new Date()).toLocaleDateString().replaceAll('/','-') + '_' 
+                    + (new Date()).toLocaleTimeString().replaceAll(':','-').replace(' ','')}.webm`;
+
+        reader.onloadend = (e) => {
+            let chunks = reader.result;
+            chunks = chunks.split(',')[1];
+            $.ajax({
+                type: "POST",
+                url: "/Decision/UploadVoice",
+                data: {filename: opinionFileName, chunks},
+                success: (response) => {
+                    document.getElementById("opinionVoice").value = opinionFileName;
+                    alert("تم حفظ التعليق بنجاح");
+                    recordOpinionSaved = 2;
+                },
+                error: (error) => {
+                    console.log(error);
+                    alert("لم يتم حفظ التعليق\nبرجاء المحاولة مرة أخرى");
+                    recordOpinionSaved = 1;
+                }
+            });
+        }
+    }
+
+    //------------------------------- Decision Voice Handlers -------------------------
+    function startDecisionRecording() {
+        startDecisionRecordButton.disabled = true;
+        stopDecisionRecordButton.disabled = false;
+        recordDecisionSaved = 1;
+        console.log("recording decision started");
+        mediaDecisionRecorder.start();
+        document.getElementById("recordingDecisionText").innerText = "جاري التسجيل...";
+    }
+
+    function stopDecisionRecording() {
+        startDecisionRecordButton.disabled = false;
+        stopDecisionRecordButton.disabled = true;
+        console.log("recording decision stopped");
+        mediaDecisionRecorder.stop();
+        document.getElementById("recordingDecisionText").innerText = "";
+    }
+
+    function onDecisionRecordingReady(e) {
+        let chunks = [];
+        chunks.push(e.data);
+        blobDecision = new Blob(chunks, { type: "audio/webm" });
+        audioDecisionPreview.src = window.URL.createObjectURL(blobDecision);
+        audioDecisionPreview.play();
+        console.log("record decision is ready");
+    };
+
+    function saveDecisionRecording() {
+        console.log("saving decision record");
+        let reader = new window.FileReader();
+        reader.readAsDataURL(blobDecision);
+        decisionFileName = `decision_${(new Date()).toLocaleDateString().replaceAll('/','-') + '_' 
+                    + (new Date()).toLocaleTimeString().replaceAll(':','-').replace(' ','')}.webm`;
+
+        reader.onloadend = (e) => {
+            let chunks = reader.result;
+            chunks = chunks.split(',')[1];
+            $.ajax({
+                type: "POST",
+                url: "/Decision/UploadVoice",
+                data: {filename: decisionFileName, chunks},
+                success: (response) => {
+                    document.getElementById("decisionVoice").value = decisionFileName;
+                    alert("تم حفظ التعليق بنجاح");
+                    recordDecisionSaved = 2;
+                },
+                error: (error) => {
+                    console.log(error);
+                    alert("لم يتم حفظ التعليق\nبرجاء المحاولة مرة أخرى");
+                    recordDecisionSaved = 1;
+                }
+            });
+        }
+    }
+
+    document.getElementById("createForm").addEventListener('submit', function (e) {
+        e.preventDefault();
+        if(recordOpinionSaved == 1 || recordDecisionSaved == 1){
+            alert('برجاء حفظ التعليق الصوتي أولا');
+            return;
+        } else {
+            this.submit();
+        }
+    });
+</script>

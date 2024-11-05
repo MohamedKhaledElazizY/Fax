@@ -1,0 +1,85 @@
+﻿@model FaxSystem.Models.Fax
+@{
+    ViewData["Title"] = "إدخال مكاتبة";
+}
+
+<div class="row wrapper">
+    <form asp-controller="Faxes" asp-action="Create"
+        enctype="multipart/form-data">
+        <div class="input-group row form__section ms-1">
+            <label asp-for="Date" class="form-label col-md-3 col-xs-12">تاريخ
+                المكاتبة</label>
+            @{
+                string faxDate = Model.Date.ToString("dd/MM/yyyy");
+                <input class="col-md-3 col-xs-12 p-1 form-control" value="@faxDate"
+                    readonly />
+            }
+            @* @await Component.InvokeAsync("NToastNotify")*@
+            @Html.HiddenFor(x=>x.Date)
+            <span class="col-md-7 col-xs-12"></span>
+        </div>
+
+        <div class="input-group row form__section ms-1">
+            <label asp-for="RegistrationNum" class="form-label col-md-3
+                col-xs-12">رقم القيد</label>
+            <input type="text" asp-for="RegistrationNum" class="col-md-6
+                col-xs-12 form-control"/>
+            <span asp-validation-for="RegistrationNum" class="text-danger
+                col-md-3 col-xs-12"></span>
+        </div>
+
+        <div class="input-group col-12 form__section">
+            <label asp-for="SenderAgencyID" class="form-label col-md-3
+                col-xs-12">الجهة المرسلة</label>
+            <select asp-for="SenderAgencyID" class="form-select col-md-6
+                col-xs-12" asp-items="ViewBag.SenderBranchID"
+                >
+                <option value=0 >اختر الجهة</option>
+            </select>
+            <span asp-validation-for="SenderAgencyID" class="text-danger
+                col-md-3 col-xs-12 pe-2"></span>
+        </div>
+        <div class="input-group row form__section ms-1">
+            <label asp-for="Subject" class="form-label col-md-3 col-xs-12">الموضوع</label>
+            <textarea asp-for="Subject" class="form-control col-md-6 col-xs-12"
+                lang="ar" rows="3"></textarea>
+            <span asp-validation-for="Subject" class="text-danger col-md-3
+                col-xs-12"></span>
+        </div>
+        <div class="input-group row form__section ms-1">
+            <label asp-for="FaxLinks" class="form-label col-md-3 col-xs-12">إرفاق
+                صور المكاتبة</label>
+            <input type="file" name="files" id="FaxLink" class="col-md-6 col-xs-12 form-control" multiple/>
+            <span class="col-md-3 col-xs-12"></span>
+        </div>
+
+        <div class="input-group row form__section ms-1">
+            <label asp-for="Notes" class="form-label col-md-3 col-xs-12">ملاحظات</label>
+            <textarea asp-for="Notes" class="form-control col-md-6 col-xs-12"
+                lang="ar" rows="3"></textarea>
+            <span asp-validation-for="Notes" class="text-danger col-md-3
+                col-xs-12"></span>
+        </div>
+
+        <div class="row mt-4 mb-3 d-flex justify-content-evenly
+            align-items-center">
+            <input type="submit" value="حفظ المكاتبة" class="btn btn-success
+                w-25" />
+        </div>
+    </form>
+</div>
+<script src="~/js/signalr/dist/browser/signalr.js"></script>
+<script>
+    var connectionCreateFax = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
+
+    connectionCreateFax.start().then(function () {
+        if (@ViewData["ress"] != -1) {
+            console.log("!");
+            connectionCreateFax.invoke("SendMessage", "11", "11", @ViewData["ress"], 1).catch(function (err) {
+                return console.error(err.toString());
+            });
+        }
+    }).catch(function (err) {
+        return console.error(err.toString());
+    });
+</script>

@@ -1,0 +1,1 @@
+﻿Select * from FAXES Where DecisionID Is Null and suspend=0;
